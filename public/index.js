@@ -245,7 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin
+        redirectTo: window.location.origin + window.location.pathname
       }
     });
     if (error) alert('구글 로그인 실패: ' + error.message);
