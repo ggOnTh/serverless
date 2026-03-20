@@ -237,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const { error } = await supabase.auth.signUp({ email, password });
     if (error) alert('회원가입 실패: ' + error.message);
-    else alert('회원가입 확인 메일이 발송되었습니다 (설정에 따라 다름).');
+    else alert('가입 확인 메일을 확인해주세요!');
   });
 
   // 구글 로그인
