@@ -50,10 +50,17 @@ document.addEventListener('DOMContentLoaded', () => {
     analyzeBtn.disabled = true;
 
     try {
+      // 사용자 세션에서 토큰 가져오기
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
       // 자체 API 서버 호출 (/api/analyze)
       const response = await fetch('/api/analyze', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ diaryContent: text })
       });
       
@@ -151,7 +158,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // 히스토리 관련 로직
   async function fetchHistory() {
     try {
-      const response = await fetch('/api/history');
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      const response = await fetch('/api/history', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       if (!response.ok) throw new Error('히스토리 로드 실패');
       
       const data = await response.json();

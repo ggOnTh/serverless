@@ -1,7 +1,6 @@
-// api/analyze.js - Vercel Serverless Function
-// 클라이언트의 요청을 받아 Gemini API를 호출하고 분석 결과를 Redis에 저장합니다.
 import Redis from 'ioredis';
 import 'dotenv/config';
+import { supabaseAdmin } from '../lib/supabase.js';
 
 /**
  * Vercel Serverless Function 핸들러
@@ -22,6 +21,22 @@ export default async function handler(req, res) {
     res.status(200).end();
     return;
   }
+
+  // 사용자 인증 확인
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).json({ error: '인증 토큰이 누락되었습니다.' });
+  }
+
+  const token = authHeader.replace('Bearer ', '');
+  const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+
+  if (authError || !user) {
+    console.error('Auth Error:', authError);
+    return res.status(401).json({ error: '유효하지 않거나 만료된 토큰입니다.' });
+  }
+
+  const userId = user.id;
 
   const { diaryContent } = req.body;
 
@@ -71,9 +86,10 @@ export default async function handler(req, res) {
         const min = String(kstDate.getMinutes()).padStart(2, '0');
         const ss = String(kstDate.getSeconds()).padStart(2, '0');
         const dateStr = `${yyyy}${mm}${dd}${hh}${min}${ss}`;
-        const key = `diary-${dateStr}`;
+        const key = `user:${userId}:diary-${dateStr}`;
         
         const diaryData = {
+          userId: userId,
           content: diaryContent,
           response: aiResponse,
           timestamp: kstDate.toISOString()

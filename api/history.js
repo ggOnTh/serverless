@@ -1,5 +1,6 @@
 import Redis from 'ioredis';
 import 'dotenv/config';
+import { supabaseAdmin } from '../lib/supabase.js';
 
 /**
  * 다이어리 히스토리를 가져오는 API 핸들러
@@ -23,6 +24,22 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: '허용되지 않는 메소드입니다.' });
   }
 
+  // 사용자 인증 확인
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).json({ error: '인증 토큰이 누락되었습니다.' });
+  }
+
+  const token = authHeader.replace('Bearer ', '');
+  const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+
+  if (authError || !user) {
+    console.error('History Auth Error:', authError);
+    return res.status(401).json({ error: '유효하지 않거나 만료된 토큰입니다.' });
+  }
+
+  const userId = user.id;
+
   const REDIS_URL = process.env.REDIS_URL;
   if (!REDIS_URL) {
     console.error('REDIS_URL is missing');
@@ -32,8 +49,8 @@ export default async function handler(req, res) {
   try {
     const redis = new Redis(REDIS_URL);
     
-    // 일기 데이터 키 검색
-    const keys = await redis.keys('diary-*');
+    // 해당 사용자 전용 일기 데이터 키 검색
+    const keys = await redis.keys(`user:${userId}:diary-*`);
     
     if (!keys || keys.length === 0) {
       await redis.quit();
