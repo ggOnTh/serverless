@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 감정일기 - 당신의 매일을 기록하세요</title>
+  <meta name="description" content="AI가 일상을 분석하고 당신의 감정을 돌봐주는 개인용 감정 일기 애플리케이션입니다.">
+  <meta property="og:title" content="AI 감정일기">
+  <meta property="og:description" content="AI가 분석하는 나의 하루 감정 리포트">
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <main class="container">
+    <header>
+      <h1>오늘의 하루는 어땠나요?</h1>
+    </header>
+
+    <div class="input-section">
+      <label for="diary-input" class="sr-only">당신의 일기를 작성하세요</label>
+      <textarea id="diary-input" placeholder="오늘 겪었던 일이나 느꼈던 감정을 자유롭게 적어보세요..."></textarea>
+      
+      <div class="button-group">
+        <button id="voice-btn" class="btn btn-voice">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+          <span>음성으로 입력하기</span>
+        </button>
+        <button id="analyze-btn" class="btn btn-analyze">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09Z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z"/><path d="M9 12H4s.55-3.03 2-4.5c1.11-1.12 2.87-1.4 4.34-1.25"/><path d="M15 15v5s3.03-.55 4.5-2c1.12-1.11 1.4-2.87 1.25-4.34"/><path d="m15 9-9 9"/></svg>
+          <span>분석 요청하기</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="result-section">
+      <h2>
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+        AI의 답변
+      </h2>
+      <div id="ai-result" class="result-box">
+        여기에 AI 답변이 표시됩니다.
+      </div>
+      <div id="loading" class="loading">
+        <div class="spinner"></div>
+      </div>
+    </div>
+  </main>
+
+  <script src="index.js"></script>
+</body>
+</html>
