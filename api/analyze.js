@@ -1,5 +1,7 @@
-// api/analyze.js - Vercel Serverless Function 예시
-// 이 파일은 벡엔드 API 역할을 하며, 클라이언트의 요청을 받아 Gemini API를 호출합니다.
+// api/analyze.js - Vercel Serverless Function
+// 클라이언트의 요청을 받아 Gemini API를 호출하고 분석 결과를 Redis에 저장합니다.
+import Redis from 'ioredis';
+import 'dotenv/config';
 
 /**
  * Vercel Serverless Function 핸들러
@@ -49,6 +51,43 @@ export default async function handler(req, res) {
     
     // Gemini 응답 추출 및 반환
     const aiResponse = data?.candidates?.[0]?.content?.parts?.[0]?.text || '응답을 생성하지 못했습니다.';
+    
+    // Redis에 데이터 저장
+    const REDIS_URL = process.env.REDIS_URL;
+    if (REDIS_URL) {
+      try {
+        const redis = new Redis(REDIS_URL);
+        
+        // 현재 시간 기반 ID 생성 (KST 기준)
+        const now = new Date();
+        const kstOffset = 9 * 60 * 60 * 1000;
+        const kstDate = new Date(now.getTime() + kstOffset);
+        
+        // YYYYMMDDHHMMSS 포맷팅
+        const yyyy = kstDate.getFullYear();
+        const mm = String(kstDate.getMonth() + 1).padStart(2, '0');
+        const dd = String(kstDate.getDate()).padStart(2, '0');
+        const hh = String(kstDate.getHours()).padStart(2, '0');
+        const min = String(kstDate.getMinutes()).padStart(2, '0');
+        const ss = String(kstDate.getSeconds()).padStart(2, '0');
+        const dateStr = `${yyyy}${mm}${dd}${hh}${min}${ss}`;
+        const key = `diary-${dateStr}`;
+        
+        const diaryData = {
+          content: diaryContent,
+          response: aiResponse,
+          timestamp: kstDate.toISOString()
+        };
+        
+        await redis.set(key, JSON.stringify(diaryData));
+        console.log(`✅ Redis 저장 성공: ${key}`);
+        await redis.quit();
+      } catch (redisError) {
+        console.error('❌ Redis 저장 실패:', redisError);
+      }
+    } else {
+      console.warn('⚠️ REDIS_URL 환경 변수가 설정되어 있지 않아 Redis 저장을 건너뜁니다.');
+    }
     
     return res.status(200).json({ result: aiResponse });
   } catch (error) {
