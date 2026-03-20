@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const voiceBtn = document.getElementById('voice-btn');
   const aiResult = document.getElementById('ai-result');
   const loading = document.getElementById('loading');
+  const historyContainer = document.getElementById('history-container');
 
   // 페이지 로드 시 로컬 스토리지에서 데이터 복원
   const savedDiary = localStorage.getItem('diary_content');
@@ -53,6 +54,9 @@ document.addEventListener('DOMContentLoaded', () => {
       // 로컬 스토리지에 저장
       localStorage.setItem('diary_content', text);
       localStorage.setItem('ai_response', resultText);
+      
+      // 최신 히스토리 다시 불러오기
+      fetchHistory();
     } catch (err) {
       console.error('분석 오류:', err);
       aiResult.innerHTML = `<span style="color: #ef4444;">${err.message || '분석 중 오류가 발생했습니다.'}</span>`;
@@ -123,9 +127,62 @@ document.addEventListener('DOMContentLoaded', () => {
     recognition.start();
   });
 
-  // 텍스트 영역 자동 크기 조절 (선택 사항)
+  // 텍스트 영역 자동 크기 조절
   diaryInput.addEventListener('input', function() {
     this.style.height = 'auto';
     this.style.height = Math.max(250, this.scrollHeight) + 'px';
   });
+
+  // 히스토리 관련 로직
+  async function fetchHistory() {
+    try {
+      const response = await fetch('/api/history');
+      if (!response.ok) throw new Error('히스토리 로드 실패');
+      
+      const data = await response.json();
+      renderHistory(data.history || []);
+    } catch (err) {
+      console.error('히스토리 요청 오류:', err);
+      historyContainer.innerHTML = '<p class="empty-msg">기록을 불러오는 데 실패했습니다.</p>';
+    }
+  }
+
+  function renderHistory(history) {
+    if (history.length === 0) {
+      historyContainer.innerHTML = '<p class="empty-msg">아직 기록된 일기가 없습니다. 첫 일기를 작성해보세요!</p>';
+      return;
+    }
+
+    historyContainer.innerHTML = history.map(item => {
+      // timestamp가 없을 경우 id에서 추출 시도 (diary-YYYYMMDDHHMMSS)
+      let dateText = '알 수 없는 날짜';
+      if (item.timestamp) {
+        const date = new Date(item.timestamp);
+        dateText = date.toLocaleString('ko-KR', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+      } else if (item.id) {
+        const raw = item.id.split('-')[1]; // YYYYMMDDHHMMSS
+        if (raw && raw.length >= 8) {
+          dateText = `${raw.slice(0, 4)}년 ${raw.slice(4, 6)}월 ${raw.slice(6, 8)}일`;
+        }
+      }
+
+      return `
+        <div class="diary-card">
+          <div class="card-date">${dateText}</div>
+          <div class="card-content">${item.content || '(내용 없음)'}</div>
+          <div class="card-response">${item.response || '(분석 결과 없음)'}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // 초기 실행
+  fetchHistory();
 });
