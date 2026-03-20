@@ -6,10 +6,10 @@
 //   3. `node server.js` 로 서버 실행 (포트 3000 기본)
 //   4. 클라이언트(index.js)에서 `/gemini` 엔드포인트로 POST 요청 전송
 
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const fetch = require('node-fetch');
+import 'dotenv/config';
+import express from 'express';
+import cors from 'cors';
+import fetch from 'node-fetch';
 
 const app = express();
 app.use(cors());

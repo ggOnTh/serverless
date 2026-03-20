@@ -1,5 +1,5 @@
-const fetch = require('node-fetch');
-require('dotenv').config();
+import fetch from 'node-fetch';
+import 'dotenv/config';
 
 const API_KEY = process.env.GEMINI_API_KEY;
 
