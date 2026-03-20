@@ -1,4 +1,19 @@
+// Supabase 설정
+const SUPABASE_URL = "https://hpbgrbadivzxdmbtfozn.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhwYmdyYmFkaXZ6eGRtYnRmb3puIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5NzEyOTMsImV4cCI6MjA4OTU0NzI5M30.Ce9HEh1RQb-vS4WTpRDt6VH-FDCkcgIvInDQrnQVN_M";
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 document.addEventListener('DOMContentLoaded', () => {
+  const authContainer = document.getElementById('auth-container');
+  const appContainer = document.getElementById('app-container');
+  const authEmail = document.getElementById('auth-email');
+  const authPassword = document.getElementById('auth-password');
+  const loginBtn = document.getElementById('login-btn');
+  const signupBtn = document.getElementById('signup-btn');
+  const googleLoginBtn = document.getElementById('google-login-btn');
+  const logoutBtn = document.getElementById('logout-btn');
+  const userEmailDisplay = document.getElementById('user-email');
+
   const diaryInput = document.getElementById('diary-input');
   const analyzeBtn = document.getElementById('analyze-btn');
   const voiceBtn = document.getElementById('voice-btn');
@@ -185,4 +200,59 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 초기 실행
   fetchHistory();
+
+  // --- 인증 로직 추가 ---
+  
+  // 로그인 상태 변경 감지
+  supabase.auth.onAuthStateChange((event, session) => {
+    console.log('Auth event:', event, session);
+    if (session) {
+      // 로그인 성공
+      authContainer.style.display = 'none';
+      appContainer.style.display = 'block';
+      userEmailDisplay.innerText = session.user.email;
+      fetchHistory(); // 로그인 후 히스토리 갱신
+    } else {
+      // 로그아웃 상태
+      authContainer.style.display = 'block';
+      appContainer.style.display = 'none';
+    }
+  });
+
+  // 이메일 로그인
+  loginBtn.addEventListener('click', async () => {
+    const email = authEmail.value.trim();
+    const password = authPassword.value;
+    if (!email || !password) return alert('이메일과 비밀번호를 입력해주세요.');
+
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) alert('로그인 실패: ' + error.message);
+  });
+
+  // 이메일 회원가입
+  signupBtn.addEventListener('click', async () => {
+    const email = authEmail.value.trim();
+    const password = authPassword.value;
+    if (!email || !password) return alert('이메일과 비밀번호를 입력해주세요.');
+
+    const { error } = await supabase.auth.signUp({ email, password });
+    if (error) alert('회원가입 실패: ' + error.message);
+    else alert('회원가입 확인 메일이 발송되었습니다 (설정에 따라 다름).');
+  });
+
+  // 구글 로그인
+  googleLoginBtn.addEventListener('click', async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin
+      }
+    });
+    if (error) alert('구글 로그인 실패: ' + error.message);
+  });
+
+  // 로그아웃
+  logoutBtn.addEventListener('click', async () => {
+    await supabase.auth.signOut();
+  });
 });
